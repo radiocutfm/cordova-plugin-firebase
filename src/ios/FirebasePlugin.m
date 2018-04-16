@@ -7,6 +7,7 @@
 @import FirebaseAnalytics;
 @import FirebaseRemoteConfig;
 @import FirebasePerformance;
+@import FirebaseCrash;
 
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
 @import UserNotifications;
@@ -33,6 +34,23 @@ static FirebasePlugin *firebasePlugin;
 - (void)pluginInitialize {
     NSLog(@"Starting Firebase plugin");
     firebasePlugin = self;
+}
+
+- (void)getId:(CDVInvokedUrlCommand *)command {
+  __block CDVPluginResult *pluginResult;
+
+  FIRInstanceIDHandler handler = ^(NSString *_Nullable instID, NSError *_Nullable error) {
+    if (error) {
+      pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+    }
+    else {
+      pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:instID];
+    }
+
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+  };
+
+  [[FIRInstanceID instanceID] getIDWithHandler:handler];
 }
 
 // DEPRECATED - alias of getToken
@@ -181,10 +199,6 @@ static FirebasePlugin *firebasePlugin;
         if (error) {
             NSLog(@"Unable to delete instance");
         } else {
-            NSString* currentToken = [[FIRInstanceID instanceID] token];
-            if (currentToken != nil) {
-                [self sendToken:currentToken];
-            }
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         }
@@ -249,13 +263,25 @@ static FirebasePlugin *firebasePlugin;
     }];
 }
 
+- (void)logError:(CDVInvokedUrlCommand *)command {
+    [self.commandDelegate runInBackground:^{
+        NSString* errorMessage = [command.arguments objectAtIndex:0];       
+        FIRCrashLog(@"%@", errorMessage);
+        assert(NO);
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    }];
+}
+
 - (void)setScreenName:(CDVInvokedUrlCommand *)command {
-    NSString* name = [command.arguments objectAtIndex:0];
+    [self.commandDelegate runInBackground:^{
+        NSString* name = [command.arguments objectAtIndex:0];
+ 
+        [FIRAnalytics setScreenName:name screenClass:NULL];
 
-    [FIRAnalytics setScreenName:name screenClass:NULL];
-
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    }];
 }
 
 - (void)setUserId:(CDVInvokedUrlCommand *)command {
@@ -391,6 +417,18 @@ static FirebasePlugin *firebasePlugin;
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
     }];
+}
+
+- (void)setAnalyticsCollectionEnabled:(CDVInvokedUrlCommand *)command {
+     [self.commandDelegate runInBackground:^{
+         BOOL enabled = [[command argumentAtIndex:0] boolValue];
+
+         [[FIRAnalyticsConfiguration sharedInstance] setAnalyticsCollectionEnabled:enabled];
+
+         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+
+         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+     }];
 }
 
 @end

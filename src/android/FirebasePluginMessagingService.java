@@ -12,6 +12,7 @@ import android.util.Log;
 import android.app.Notification;
 import android.text.TextUtils;
 import android.content.ContentResolver;
+import android.graphics.Color;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -46,19 +47,20 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
         String text;
         String id;
         String sound = null;
+        String lights = null;
+        Map<String, String> data = remoteMessage.getData();
+      
         if (remoteMessage.getNotification() != null) {
             title = remoteMessage.getNotification().getTitle();
             text = remoteMessage.getNotification().getBody();
             id = remoteMessage.getMessageId();
         } else {
-            title = remoteMessage.getData().get("title");
-            text = remoteMessage.getData().get("text");
-            id = remoteMessage.getData().get("id");
-            sound = remoteMessage.getData().get("sound");
-
-            if(TextUtils.isEmpty(text)){
-                text = remoteMessage.getData().get("body");
-            }
+            title = data.get("title");
+            text = data.get("text");
+            id = data.get("id");
+            sound = data.get("sound");
+            lights = data.get("lights"); //String containing hex ARGB color, miliseconds on, miliseconds off, example: '#FFFF00FF,1000,3000'
+            if(TextUtils.isEmpty(text)) text = data.get("body");
         }
 
         if(TextUtils.isEmpty(id)){
@@ -72,16 +74,17 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
         Log.d(TAG, "Notification Message Title: " + title);
         Log.d(TAG, "Notification Message Body/Text: " + text);
         Log.d(TAG, "Notification Message Sound: " + sound);
+        Log.d(TAG, "Notification Message Lights: " + lights);
 
         // TODO: Add option to developer to configure if show notification when app on foreground
-        if (!TextUtils.isEmpty(text) || !TextUtils.isEmpty(title) || (!remoteMessage.getData().isEmpty())) {
+        if (!TextUtils.isEmpty(text) || !TextUtils.isEmpty(title) || (!data.isEmpty())) {
             boolean showNotification = (FirebasePlugin.inBackground() || !FirebasePlugin.hasNotificationsCallback()) && (!TextUtils.isEmpty(text) || !TextUtils.isEmpty(title));
-            sendNotification(id, title, text, remoteMessage.getData(), showNotification, sound);
+            sendNotification(id, title, text, data, showNotification, sound, lights);
         }
 
     }
 
-    private void sendNotification(String id, String title, String messageBody, Map<String, String> data, boolean showNotification, String sound) {
+    private void sendNotification(String id, String title, String messageBody, Map<String, String> data, boolean showNotification, String sound, String lights) {
         Bundle bundle = new Bundle();
         for (String key : data.keySet()) {
             bundle.putString(key, data.get(key));
@@ -117,6 +120,18 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                 notificationBuilder.setSound(soundPath);
             } else {
                 Log.d(TAG, "Sound was null ");
+            }
+
+            if(lights != null) {
+              try {
+                String[] lightsComponents = lights.replaceAll("\\s","").split(",");
+                if(lightsComponents.length == 3) {
+                  int lightArgb = Color.parseColor(lightsComponents[0]);
+                  int lightOnMs = Integer.parseInt(lightsComponents[1]);
+                  int lightOffMs = Integer.parseInt(lightsComponents[2]);
+                  notificationBuilder.setLights(lightArgb, lightOnMs, lightOffMs);
+                }
+              }catch(Exception e){}
             }
 
             if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
