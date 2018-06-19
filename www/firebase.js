@@ -1,5 +1,9 @@
 var exec = require('cordova/exec');
 
+exports.getVerificationID = function (number, success, error) {
+    exec(success, error, "FirebasePlugin", "getVerificationID", [number]);
+};
+
 exports.getInstanceId = function (success, error) {
     exec(success, error, "FirebasePlugin", "getInstanceId", []);
 };
@@ -142,4 +146,16 @@ exports.stopTrace = function (name, success, error) {
 
 exports.setAnalyticsCollectionEnabled = function (enabled, success, error) {
     exec(success, error, "FirebasePlugin", "setAnalyticsCollectionEnabled", [enabled]);
+};
+
+exports.verifyPhoneNumber = function (number, timeOutDuration, success, error) {
+    if (typeof timeOutDuration === 'function') {
+      // method being called with old signature: function(number, success, error)
+      // timeOutDuration is the success callback, success is the error callback
+      exec(timeOutDuration, success, "FirebasePlugin", "verifyPhoneNumber", [number]);
+    } else {
+      // method being called with new signature: function(number, timeOutDuration, success, error)
+      // callbacks are correctly named
+      exec(success, error, "FirebasePlugin", "verifyPhoneNumber", [number, timeOutDuration]);
+    }
 };
