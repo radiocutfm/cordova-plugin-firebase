@@ -55,13 +55,25 @@ xmlns:android="http://schemas.android.com/apk/res/android">
 		<source-file src="src/android/colors.xml" target-dir="res/values" />
 
 		<framework src="src/android/build.gradle" custom="true" type="gradleReference" />
-        <framework src="com.google.android.gms:play-services-tagmanager:16.0.8" />
-		<framework src="com.google.firebase:firebase-core:16.0.8" />
-		<framework src="com.google.firebase:firebase-messaging:17.6.0" />
-		<framework src="com.google.firebase:firebase-config:16.4.1" />
-		<framework src="com.google.firebase:firebase-perf:16.2.4" />
-        <framework src="com.google.firebase:firebase-iid:17.1.2" />
-        <framework src="com.google.firebase:firebase-auth:16.2.0" />
+
+		<!-- Default versions for Gradle dependencies -->
+		<preference name="ANDROID_PLAY_SERVICES_TAGMANAGER_VERSION" default="17.0.0" />
+		<preference name="ANDROID_FIREBASE_ANALYTICS_VERSION" default="17.2.1" />
+		<preference name="ANDROID_FIREBASE_MESSAGING_VERSION" default="20.0.0" />
+		<preference name="ANDROID_FIREBASE_CONFIG_VERSION" default="19.0.3" />
+		<preference name="ANDROID_FIREBASE_PERF_VERSION" default="19.0.1" />
+		<preference name="ANDROID_FIREBASE_AUTH_VERSION" default="19.1.0" />
+		<preference name="ANDROID_CRASHLYTICS_VERSION" default="2.10.1" />
+		<preference name="ANDROID_CRASHLYTICS_NDK_VERSION" default="2.1.1" />
+
+		<framework src="com.google.android.gms:play-services-tagmanager:$ANDROID_PLAY_SERVICES_TAGMANAGER_VERSION" />
+		<framework src="com.google.firebase:firebase-analytics:$ANDROID_FIREBASE_ANALYTICS_VERSION" />
+		<framework src="com.google.firebase:firebase-messaging:$ANDROID_FIREBASE_MESSAGING_VERSION" />
+		<framework src="com.google.firebase:firebase-config:$ANDROID_FIREBASE_CONFIG_VERSION" />
+		<framework src="com.google.firebase:firebase-perf:$ANDROID_FIREBASE_PERF_VERSION" />
+		<framework src="com.google.firebase:firebase-auth:$ANDROID_FIREBASE_AUTH_VERSION" />
+		<framework src="com.crashlytics.sdk.android:crashlytics:$ANDROID_CRASHLYTICS_VERSION" />
+		<framework src="com.crashlytics.sdk.android:crashlytics-ndk:$ANDROID_CRASHLYTICS_NDK_VERSION" />
 	</platform>
 
 	<platform name="ios">
